@@ -14,10 +14,9 @@ class ReusableLayer[T: ClassTag]
   extends KerasLayer[Tensor[T], Tensor[T], T] {
 
   override def updateGradInput(input: Tensor[T], gradOutput: Tensor[T]): Tensor[T] = {
-    gradInput = if (hasGradInput) {
-      labor.updateGradInput(input, gradOutput)
-    } else {
-      Activity.allocate[Tensor[T], T]()
+    if (hasGradInput) {
+      val laborGradInput = labor.updateGradInput(input, gradOutput)
+      gradInput.resizeAs(laborGradInput).copy(laborGradInput)
     }
     gradInput
   }
@@ -31,7 +30,8 @@ class ReusableLayer[T: ClassTag]
   }
 
   override def updateOutput(input: Tensor[T]): Tensor[T] = {
-    output = labor.updateOutput(input).clone()
+    val laborOutput = labor.updateOutput(input)
+    output.resizeAs(laborOutput).copy(laborOutput)
     output
   }
 
@@ -64,10 +64,9 @@ class ReplicaLayer[T: ClassTag]
   extends KerasLayer[Tensor[T], Tensor[T], T] {
 
   override def updateGradInput(input: Tensor[T], gradOutput: Tensor[T]): Tensor[T] = {
-    gradInput = if (hasGradInput) {
-      labor.updateGradInput(input, gradOutput)
-    } else {
-      Activity.allocate[Tensor[T], T]()
+    if (hasGradInput) {
+      val laborGradInput = labor.updateGradInput(input, gradOutput)
+      gradInput.resizeAs(laborGradInput).copy(laborGradInput)
     }
     gradInput
   }
@@ -75,7 +74,8 @@ class ReplicaLayer[T: ClassTag]
   override def computeOutputShape(inputShape: Shape): Shape = delegateShape
 
   override def updateOutput(input: Tensor[T]): Tensor[T] = {
-    output = labor.updateOutput(input).clone()
+    val laborOutput = labor.updateOutput(input)
+    output.resizeAs(laborOutput).copy(laborOutput)
     output
   }
 
